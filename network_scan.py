@@ -1,5 +1,7 @@
 import subprocess
 import socket
+import logging
+logger = logging.getLogger(__name__)
 
 def ping(ip: str) -> bool:
     try:
@@ -27,7 +29,7 @@ def scan_network(base_ip: str, start: int, end: int):
 
     for i in range(start, end + 1):
         ip = f"{base_ip}.{i}"
-        print(f"Pingování číslo {i} z {end+1}")
+        print(f"Pingování číslo {i} z {end}")
         if ping(ip):
             hostname = resolve_hostname(ip)
             active_hosts.append((ip, hostname))
@@ -38,6 +40,16 @@ def run_network_scan(zaklad_ip:str, start:str,konec:str):
     st = int(start)
     ko = int(konec)
     zak = zaklad_ip.rstrip(".")
-    hosts = scan_network(zak, st, ko)
+    logger.info(f"Skenovani IP adres {zaklad_ip}.{start} - {zaklad_ip}.{konec}")
+    if st == None or ko == None or zak == None:
+        logger.error("Spatne zadane udaje pro sken")
+        return None
+    else:
+        hosts = scan_network(zak, st, ko)
+        logger.info("Aktivni hoste: ")
+        for host in hosts:
+            ip, hostname = host
+            logger.info(f"IP adresa: {ip}, hostname: {hostname if not None else "Neznamy"}")
+    logger.info("Konec network scanu")
     return hosts
 

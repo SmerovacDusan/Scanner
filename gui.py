@@ -2,10 +2,12 @@ import network_scan, this_pc, port_scan
 import threading
 import sys
 import ipaddress
+import logging
+logger = logging.getLogger(__name__)
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QLineEdit, QTextEdit
 
-
+PC_v_logu = False
 def start_app():
     app = QApplication(sys.argv)
     w = Window()
@@ -15,6 +17,7 @@ def start_app():
 
 class Window(QMainWindow):
     def __init__(self):
+        logger.info("Spousteni hlavniho okna")
         super().__init__()
 
         self.setWindowTitle('Scanner')
@@ -162,6 +165,21 @@ class Window(QMainWindow):
         layout.addWidget(title)
         layout.addWidget(form_widget)
         self.load_page(page)
+        
+        if PC_v_logu == False:
+            logger.info("Vypisovani udaju o tomto PC")
+            logger.info(f"IP adresa site: {ip_site}")
+            logger.info(f"Maska site: {pocitac.subnet_mask}")
+            logger.info(f"IPv4 adresa pocitace: {pocitac.ipv4}")
+            logger.info(f"IPv6 adresa pocitace: {pocitac.ipv6}")
+            logger.info(f"IPv4 adresa gateway: {pocitac.gateway_ip}")
+            logger.info("DNS servery:")
+            for i in pocitac.dns_servery:
+                ip, jmeno = i
+                if "NetBIOS" in jmeno or ip is None:
+                    continue
+                logger.info(f"IP adresa DNS serveru: {ip}")
+            PC_v_logu == True
 
     def show_port_scan_page(self):
         page = QWidget()
@@ -234,6 +252,7 @@ class Window(QMainWindow):
 
     def port_click(self, input_ip, min, max):
         self.open_portyT.setText("Kontrola portů, může to chvíli trvat")
+        logger.info(f"Spousteni port scanu na IP adrese {input_ip} v rozsahu {min}-{max}")
 
         # uložíme výsledky sem
         self.aport:int=[]
@@ -249,13 +268,16 @@ class Window(QMainWindow):
         def check_finished():
             if not thread.is_alive():
                 if len(self.aport)>0:
+                    logger.info("Otevrene porty: ")
                     text = ""
                     for port in self.aport:
                         text += f"{port},"
                 else:
                     text=f"V rozsahu portů {min} až {max} nejsou otevřené žádné porty"
-                
+                    logger.info("V rozsahu nejsou zadne otevrene porty")
+
                 self.open_portyT.setText(text)
+                logger.info("Konec kontroly portu")
                 timer.stop()
 
         timer = QTimer()
@@ -339,7 +361,8 @@ class Window(QMainWindow):
        
        
     def scan_click(self, input_ip, ip_start, ip_konec):
-        self.aktivni_ip.setText("Vyhledávání")
+        logger.info("Spousteni network scanu")
+        self.aktivni_ip.setText("Vyhledávání, může to chvíli trvat")
        
         self.scan_result = None
        
